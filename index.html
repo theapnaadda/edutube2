@@ -1,0 +1,2206 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduTube - Curated Academic Streams</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Google Fonts: Sora (Body) & Space Grotesk (Headers) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- React & Babel CDNs -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Firebase Legacy compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Sora', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f5f3ff',
+              100: '#ede9fe',
+              500: '#a855f7', // Electric Violet
+              600: '#8b5cf6',
+              700: '#6d28d9',
+              900: '#4c1d95',
+            },
+            amoled: {
+              950: '#000000',
+              900: '#030303',
+              850: '#080808',
+              800: '#0d0d0d',
+              750: '#141414',
+              700: '#1a1a1a',
+              600: '#252525',
+            }
+          },
+          animation: {
+            'pulse-slow': 'pulse 5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'float-slow': 'float 8s ease-in-out infinite'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-6px) rotate(0.5deg); }
+    }
+    .animate-float-slow { animation: float 8s ease-in-out infinite; }
+    
+    body {
+      background-color: #000000;
+      color: #f1f5f9;
+      font-family: 'Sora', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Google Flow aesthetic gradient backdrops */
+    .flow-glow {
+      background: radial-gradient(circle at 10% 20%, rgba(168, 85, 247, 0.08) 0%, transparent 40%),
+                  radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.06) 0%, transparent 45%);
+    }
+
+    .clean-grid {
+      background-image: linear-gradient(rgba(255, 255, 255, 0.008) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255, 255, 255, 0.008) 1px, transparent 1px);
+      background-size: 30px 30px;
+    }
+
+    /* Auto-Scroller Infinite Marquees */
+    @keyframes marquee-ltr {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-33.333%); }
+    }
+    @keyframes marquee-rtl {
+      0% { transform: translateX(-33.333%); }
+      100% { transform: translateX(0); }
+    }
+    .animate-marquee-left {
+      display: flex;
+      width: max-content;
+      animation: marquee-ltr 45s linear infinite;
+    }
+    .animate-marquee-right {
+      display: flex;
+      width: max-content;
+      animation: marquee-rtl 45s linear infinite;
+    }
+    .animate-marquee-left:hover, .animate-marquee-right:hover {
+      animation-play-state: paused;
+    }
+
+    /* Dynamic Logo Animation Keyframes */
+    @keyframes spin-clockwise {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes spin-counterclockwise {
+      0% { transform: rotate(360deg); }
+      100% { transform: rotate(0deg); }
+    }
+    .animate-logo-outer {
+      animation: spin-clockwise 14s linear infinite;
+    }
+    .animate-logo-inner {
+      animation: spin-counterclockwise 7s linear infinite;
+    }
+
+    /* Click Ripple Animation Stylings */
+    .click-ripple {
+      position: fixed;
+      width: 14px;
+      height: 14px;
+      background: radial-gradient(circle, rgba(168,85,247,0.7) 0%, rgba(99,102,241,0) 70%);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%) scale(1);
+      animation: ripple-grow-fade 0.55s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+      z-index: 9999;
+    }
+    @keyframes ripple-grow-fade {
+      to {
+        transform: translate(-50%, -50%) scale(6.5);
+        opacity: 0;
+      }
+    }
+
+    /* Clean Fullscreen Wrapper stretching behavior */
+    :fullscreen {
+      background-color: #000000 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      border: none !important;
+    }
+    :-webkit-full-screen {
+      background-color: #000000 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      border: none !important;
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #000000;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #141414;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a855f7;
+    }
+    
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="antialiased flow-glow">
+
+  <div id="root" class="clean-grid min-h-screen"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBlyvRGrOOuJ_cobMsYv3iphwYC0ErlwaU",
+      authDomain: "videohub-b9282.firebaseapp.com",
+      databaseURL: "https://videohub-b9282-default-rtdb.firebaseio.com",
+      projectId: "videohub-b9282",
+      storageBucket: "videohub-b9282.firebasestorage.app",
+      messagingSenderId: "496956844721",
+      appId: "1:496956844721:web:736014642087b7c75fd090"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    const CATEGORIES = ["ALL", "JEE", "NEET", "CLASS 11th", "CLASS 12th", "AI & DEV", "EduTube"];
+
+    const CAROUSEL_METADATA = [
+      { name: "JEE", icon: "fa-atom", glow: "from-purple-600 to-indigo-600", tag: "Engineering", count: "IIT Syllabi", texture: "physics" },
+      { name: "NEET", icon: "fa-stethoscope", glow: "from-violet-600 to-teal-600", tag: "Medical", count: "Biology", texture: "biology" },
+      { name: "CLASS 11th", icon: "fa-book-open", glow: "from-fuchsia-600 to-orange-600", tag: "Academic", count: "Foundations", texture: "classic" },
+      { name: "CLASS 12th", icon: "fa-award", glow: "from-rose-600 to-pink-600", tag: "Academic", count: "Boards Prep", texture: "classic-two" },
+      { name: "AI & DEV", icon: "fa-terminal", glow: "from-blue-600 to-purple-600", tag: "Programming", count: "Machine Learning", texture: "ai" },
+      { name: "EduTube", icon: "fa-circle-play", glow: "from-brand-600 to-indigo-600", tag: "Originals", count: "Resources", texture: "edutube" }
+    ];
+
+    // High quality standard thumbnail fetcher for secure YouTube image assets
+    function getThumbnail(id) {
+      return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : '';
+    }
+
+    // SVG Texture Overlay Component for aesthetic boxes
+    function TextureOverlay({ type }) {
+      if (type === 'physics') {
+        return (
+          <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="85%" cy="20%" r="55" stroke="rgba(168,85,247,0.4)" strokeWidth="1" fill="none" />
+            <circle cx="85%" cy="20%" r="35" stroke="rgba(168,85,247,0.3)" strokeWidth="1" fill="none" />
+            <line x1="0" y1="75%" x2="100%" y2="75%" stroke="rgba(168,85,247,0.2)" strokeWidth="1" strokeDasharray="3 3" />
+          </svg>
+        );
+      }
+      if (type === 'biology') {
+        return (
+          <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M-10,40 Q25,10 60,40 T130,40 T200,40 T270,40" fill="none" stroke="rgba(20,184,166,0.3)" strokeWidth="1.5" />
+            <path d="M-10,55 Q25,85 60,55 T130,55 T200,55 T270,55" fill="none" stroke="rgba(20,184,166,0.2)" strokeWidth="1" strokeDasharray="4 2" />
+          </svg>
+        );
+      }
+      if (type === 'ai') {
+        return (
+          <svg className="absolute inset-0 w-full h-full opacity-[0.09] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10,10 L70,10 L90,30 L190,30" fill="none" stroke="rgba(59,130,246,0.4)" strokeWidth="1.5" />
+            <circle cx="10" cy="10" r="3" fill="#3b82f6" />
+            <circle cx="190" cy="30" r="3" fill="#3b82f6" />
+            <line x1="90" y1="30" x2="90" y2="100" stroke="rgba(59,130,246,0.2)" strokeWidth="1" />
+          </svg>
+        );
+      }
+      if (type === 'edutube') {
+        return (
+          <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="80%" y="40%" width="3" height="30" fill="rgba(168,85,247,0.5)" />
+            <rect x="85%" y="30%" width="3" height="50" fill="rgba(168,85,247,0.4)" />
+            <rect x="90%" y="35%" width="3" height="40" fill="rgba(168,85,247,0.3)" />
+          </svg>
+        );
+      }
+      if (type === 'classic') {
+        return (
+          <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="0" y1="0" x2="100%" y2="100%" stroke="rgba(249,115,22,0.15)" strokeWidth="1" />
+            <line x1="20%" y1="0" x2="100%" y2="80%" stroke="rgba(249,115,22,0.1)" strokeWidth="1" />
+          </svg>
+        );
+      }
+      if (type === 'classic-two') {
+        return (
+          <svg className="absolute inset-0 w-full h-full opacity-[0.08] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="20" cy="20" r="40" stroke="rgba(244,63,94,0.3)" strokeWidth="1" fill="none" />
+            <circle cx="180" cy="120" r="60" stroke="rgba(244,63,94,0.2)" strokeWidth="1" fill="none" />
+          </svg>
+        );
+      }
+      if (type === 'deploy') {
+        return (
+          <svg className="absolute inset-0 w-full h-full opacity-[0.08] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="10" y="10" width="80" height="40" rx="4" stroke="rgba(139,92,246,0.3)" strokeWidth="1" fill="none" />
+            <line x1="15" y1="20" x2="45" y2="20" stroke="rgba(139,92,246,0.3)" strokeWidth="1" />
+            <line x1="15" y1="30" x2="35" y2="30" stroke="rgba(139,92,246,0.2)" strokeWidth="1" />
+          </svg>
+        );
+      }
+      return null;
+    }
+
+    // Beautiful Redesigned Animated Logo Component
+    function AnimatedLogo() {
+      return (
+        <div className="relative w-11 h-11 flex items-center justify-center select-none">
+          {/* Outer Ring Spinning Clockwise */}
+          <svg className="absolute w-11 h-11 animate-logo-outer text-brand-500 opacity-90" viewBox="0 0 100 100" fill="none">
+            <circle cx="50" cy="50" r="42" stroke="currentColor" strokeWidth="3" strokeDasharray="50 30 15 25" strokeLinecap="round" />
+          </svg>
+          
+          {/* Inner Ring Spinning Counter-Clockwise */}
+          <svg className="absolute w-8 h-8 animate-logo-inner text-indigo-400 opacity-80" viewBox="0 0 100 100" fill="none">
+            <circle cx="50" cy="50" r="34" stroke="currentColor" strokeWidth="4" strokeDasharray="30 30" strokeLinecap="round" />
+          </svg>
+
+          {/* Central Pulsing CORE with video play node */}
+          <div className="relative w-5 h-5 bg-gradient-to-tr from-brand-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-brand-500/40 animate-pulse">
+            <i className="fa-solid fa-play text-[8px] text-white ml-0.5"></i>
+          </div>
+        </div>
+      );
+    }
+
+    // Scroll Reveal Intersection Observer Component
+    function Reveal({ children, className = "" }) {
+      const [isVisible, setIsVisible] = useState(false);
+      const domRef = useRef();
+
+      useEffect(() => {
+        const observer = new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              setIsVisible(true);
+            }
+          });
+        }, { threshold: 0.05 });
+
+        const current = domRef.current;
+        if (current) observer.observe(current);
+        return () => {
+          if (current) observer.unobserve(current);
+        };
+      }, []);
+
+      return (
+        <div
+          ref={domRef}
+          className={`transition-all duration-1000 transform ease-out ${isVisible ? 'opacity-100 blur-none translate-y-0' : 'opacity-0 blur-md translate-y-8'} ${className}`}
+        >
+          {children}
+        </div>
+      );
+    }
+
+    // Typewriter Display Hook
+    function useTypewriter(phrases, speed = 90, delay = 4500) {
+      const [text, setText] = useState("");
+      const [idx, setIdx] = useState(0);
+      const [deleting, setDeleting] = useState(false);
+
+      useEffect(() => {
+        let timer;
+        const currentStr = phrases[idx];
+        if (deleting) {
+          timer = setTimeout(() => {
+            setText(currentStr.substring(0, text.length - 1));
+          }, speed / 2);
+        } else {
+          timer = setTimeout(() => {
+            setText(currentStr.substring(0, text.length + 1));
+          }, speed);
+        }
+
+        if (!deleting && text === currentStr) {
+          timer = setTimeout(() => setDeleting(true), delay);
+        } else if (deleting && text === "") {
+          setDeleting(false);
+          setIdx((prev) => (prev + 1) % phrases.length);
+        }
+        return () => clearTimeout(timer);
+      }, [text, deleting, idx, phrases]);
+
+      return text;
+    }
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('home');
+      const [user, setUser] = useState(null);
+      const [isAdmin, setIsAdmin] = useState(false);
+      const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+
+      const [videos, setVideos] = useState([]);
+      const [loading, setLoading] = useState(true);
+
+      // Bookmarks and history state initialization
+      const [bookmarks, setBookmarks] = useState(() => {
+        try {
+          return JSON.parse(localStorage.getItem('edutube_bookmarks') || '{}');
+        } catch(e) { return {}; }
+      });
+      const [history, setHistory] = useState(() => {
+        try {
+          return JSON.parse(localStorage.getItem('edutube_history') || '{}');
+        } catch(e) { return {}; }
+      });
+
+      // Filter States for Bookmark, History, and Admin list
+      const [bookmarkFilter, setBookmarkFilter] = useState("ALL");
+      const [historyFilter, setHistoryFilter] = useState("ALL");
+      const [adminCategoryFilter, setAdminCategoryFilter] = useState("ALL");
+
+      // Custom dialog alerts
+      const [globalToast, setGlobalToast] = useState({ isOpen: false, message: '', type: 'info' });
+      const [globalConfirm, setGlobalConfirm] = useState({ isOpen: false, message: '', onConfirm: null });
+
+      // Exit Application Confirmation Modal State
+      const [exitModalOpen, setExitModalOpen] = useState(false);
+
+      const [authModal, setAuthModal] = useState({ isOpen: false, tab: 'login' });
+      const [authForm, setAuthForm] = useState({ email: '', password: '' });
+      const [authErr, setAuthErr] = useState('');
+      
+      const [watchVideo, setWatchVideo] = useState(null);
+      const [originTab, setOriginTab] = useState('home'); // Tracks where the video was opened from
+      const [isFullscreen, setIsFullscreen] = useState(false); // Tracks fullscreen orientation state
+      
+      const [popup, setPopup] = useState({ isOpen: false, title: '', content: '' });
+
+      // Admin Management States
+      const [adminForm, setAdminForm] = useState({ id: "", title: "", category: "JEE", youtubeUrl: "", channelName: "", isTrending: false });
+      const [isAdminEditing, setIsAdminEditing] = useState(false);
+      const [adminMsg, setAdminMsg] = useState("");
+
+      const [learningCategory, setLearningCategory] = useState("ALL");
+      const [selectedAuthor, setSelectedAuthor] = useState("ALL");
+      const [trendingCategory, setTrendingCategory] = useState("ALL");
+      const [searchQuery, setSearchQuery] = useState("");
+      
+      const [slideIndex, setSlideIndex] = useState(0);
+
+      const profileMenuRef = useRef(null);
+      const popstateHandlerRef = useRef(null);
+      const videoWrapperRef = useRef(null); // Ref targets parent wrapper layout to toggle fullscreen and float overlays cleanly
+      const iframeRef = useRef(null); // Direct iframe selector
+
+      const typewriterPhrases = ["Developed by Velvet Shadow"];
+      const runningTagline = useTypewriter(typewriterPhrases, 100, 4500);
+
+      // Global click ripple handler
+      useEffect(() => {
+        const handleGlobalClick = (e) => {
+          const ripple = document.createElement('div');
+          ripple.className = 'click-ripple';
+          ripple.style.left = `${e.clientX}px`;
+          ripple.style.top = `${e.clientY}px`;
+          document.body.appendChild(ripple);
+          setTimeout(() => {
+            ripple.remove();
+          }, 550);
+        };
+        window.addEventListener('click', handleGlobalClick);
+        return () => window.removeEventListener('click', handleGlobalClick);
+      }, []);
+
+      // Secure browser exit stack interceptor
+      useEffect(() => {
+        // Seed initial navigation frame onto historic queue
+        window.history.pushState({ entryPoint: true }, '');
+        window.history.pushState({ gateActive: true }, '');
+
+        const handlePopState = (e) => {
+          // Immediately re-inject structural history state to neutralize native back-navigation
+          window.history.pushState({ gateActive: true }, '');
+          setExitModalOpen(true);
+        };
+
+        popstateHandlerRef.current = handlePopState;
+        window.addEventListener('popstate', handlePopState);
+
+        const handleBeforeUnload = (e) => {
+          e.preventDefault();
+          e.returnValue = '';
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+          window.removeEventListener('popstate', handlePopState);
+          window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+      }, []);
+
+      // Tracking fullscreen events to unlock orientation if exited natively
+      useEffect(() => {
+        const handleFullscreenChange = () => {
+          const isFull = !!document.fullscreenElement;
+          setIsFullscreen(isFull);
+          if (!isFull && screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+          }
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        return () => {
+          document.removeEventListener('fullscreenchange', handleFullscreenChange);
+          document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+        };
+      }, []);
+
+      // Dropdown interaction listener
+      useEffect(() => {
+        function checkOutside(e) {
+          if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
+            setShowProfileDropdown(false);
+          }
+        }
+        document.addEventListener("mousedown", checkOutside);
+        return () => document.removeEventListener("mousedown", checkOutside);
+      }, []);
+
+      // Realtime Database read sync
+      useEffect(() => {
+        const ref = db.ref("videos");
+        ref.on("value", (snap) => {
+          const val = snap.val();
+          if (val) {
+            const list = Object.keys(val).map(key => ({ id: key, ...val[key] }));
+            setVideos(list.reverse());
+          } else {
+            setVideos([]);
+          }
+          setLoading(false);
+        });
+        return () => ref.off();
+      }, []);
+
+      // Sync user data endpoints
+      useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((usr) => {
+          setUser(usr);
+          if (usr) {
+            setIsAdmin(usr.email === "thepremanshu@gmail.com");
+
+            db.ref(`users/${usr.uid}/bookmarks`).on("value", (snap) => {
+              const data = snap.val() || {};
+              setBookmarks(data);
+              localStorage.setItem('edutube_bookmarks', JSON.stringify(data));
+            });
+
+            db.ref(`users/${usr.uid}/history`).on("value", (snap) => {
+              const data = snap.val() || {};
+              setHistory(data);
+              localStorage.setItem('edutube_history', JSON.stringify(data));
+            });
+          } else {
+            setIsAdmin(false);
+            setBookmarks({});
+            setHistory({});
+          }
+        });
+        return () => unsubscribe();
+      }, []);
+
+      // Robust slideshow background selector (accurately filters standard booleans)
+      const slideshowSource = useMemo(() => {
+        const trends = videos.filter(v => v.isTrending === true || v.isTrending === "true");
+        return trends.length > 0 ? trends : videos.slice(0, 5);
+      }, [videos]);
+
+      // Slideshow Rotator Interval
+      useEffect(() => {
+        if (slideshowSource.length === 0) return;
+        if (slideIndex >= slideshowSource.length) {
+          setSlideIndex(0);
+        }
+        const interval = setInterval(() => {
+          setSlideIndex((prev) => (prev + 1) % slideshowSource.length);
+        }, 5500);
+        return () => clearInterval(interval);
+      }, [slideshowSource, slideIndex]);
+
+      const showToast = (message, type = 'info') => {
+        setGlobalToast({ isOpen: true, message, type });
+        setTimeout(() => setGlobalToast({ isOpen: false, message: '', type: 'info' }), 4500);
+      };
+
+      const promptConfirm = (message, onConfirm) => {
+        setGlobalConfirm({ isOpen: true, message, onConfirm });
+      };
+
+      const toggleBookmark = (video) => {
+        if (!user) {
+          showToast("🔒 Authentication is required to bookmark dynamic course units.", "warning");
+          setAuthModal({ isOpen: true, tab: 'login' });
+          return;
+        }
+
+        const newBookmarks = { ...bookmarks };
+        const pathRef = db.ref(`users/${user.uid}/bookmarks/${video.id}`);
+
+        if (bookmarks[video.id]) {
+          delete newBookmarks[video.id];
+          setBookmarks(newBookmarks);
+          localStorage.setItem('edutube_bookmarks', JSON.stringify(newBookmarks));
+          pathRef.remove().then(() => showToast("Removed from bookmarks."));
+        } else {
+          newBookmarks[video.id] = { ...video, bookmarkedAt: Date.now() };
+          setBookmarks(newBookmarks);
+          localStorage.setItem('edutube_bookmarks', JSON.stringify(newBookmarks));
+          pathRef.set({ ...video, bookmarkedAt: Date.now() }).then(() => showToast("Added to bookmarks."));
+        }
+      };
+
+      const handlePlayVideo = (video) => {
+        setOriginTab(activeTab); // Capture exact workspace origin tab
+        setWatchVideo(video);
+        if (user) {
+          const newHistory = { ...history };
+          newHistory[video.id] = { ...video, watchedAt: Date.now() };
+          setHistory(newHistory);
+          localStorage.setItem('edutube_history', JSON.stringify(newHistory));
+          db.ref(`users/${user.uid}/history/${video.id}`).set({ ...video, watchedAt: Date.now() });
+        }
+      };
+
+      const handleDeleteHistoryItem = (videoId) => {
+        promptConfirm("Do you want to clear this specific lecture node from history traces?", () => {
+          const newHistory = { ...history };
+          delete newHistory[videoId];
+          setHistory(newHistory);
+          localStorage.setItem('edutube_history', JSON.stringify(newHistory));
+
+          if (user) {
+            db.ref(`users/${user.uid}/history/${videoId}`).remove()
+              .then(() => showToast("Session record cleared."));
+          } else {
+            showToast("Session record cleared.");
+          }
+        });
+      };
+
+      // Admin operations
+      const handleSaveVideo = (e) => {
+        e.preventDefault();
+        setAdminMsg('');
+        const ytId = getYouTubeId(adminForm.youtubeUrl);
+        if (!ytId) {
+          setAdminMsg("Check URL link mapping values.");
+          return;
+        }
+
+        const payload = {
+          title: adminForm.title,
+          category: adminForm.category,
+          youtubeUrl: adminForm.youtubeUrl,
+          videoId: ytId,
+          channelName: adminForm.channelName || "EduTube Stream",
+          isTrending: adminForm.isTrending,
+          modifiedAt: Date.now()
+        };
+
+        if (isAdminEditing) {
+          db.ref(`videos/${adminForm.id}`).update(payload)
+            .then(() => {
+              setAdminMsg("Modified element indexed.");
+              resetAdminForm();
+              showToast("✔️ Lecture entry updated.", "success");
+            })
+            .catch(err => setAdminMsg(err.message));
+        } else {
+          payload.createdAt = Date.now();
+          db.ref("videos").push(payload)
+            .then(() => {
+              setAdminMsg("Indexed new lecture.");
+              resetAdminForm();
+              showToast("✔️ New entry published.", "success");
+            })
+            .catch(err => setAdminMsg(err.message));
+        }
+      };
+
+      const resetAdminForm = () => {
+        setAdminForm({ id: "", title: "", category: "JEE", youtubeUrl: "", channelName: "", isTrending: false });
+        setIsAdminEditing(false);
+      };
+
+      // Trigger populating target video and scrolling smoothly to workspace form
+      const startEditVideo = (v) => {
+        setAdminForm({
+          id: v.id,
+          title: v.title,
+          category: v.category === "ALL" ? "JEE" : v.category,
+          youtubeUrl: v.youtubeUrl,
+          channelName: v.channelName,
+          isTrending: v.isTrending || false
+        });
+        setIsAdminEditing(true);
+        
+        // Reposition view to the form interface dynamically
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        showToast("✏️ Edit form populated with selected lecture.", "info");
+      };
+
+      // Confirmed exit triggers safe clean up and historic backtracking
+      const confirmExitApp = () => {
+        if (popstateHandlerRef.current) {
+          window.removeEventListener('popstate', popstateHandlerRef.current);
+        }
+        setExitModalOpen(false);
+        // Step back past lock parameters to allow the native exit
+        if (window.history.length > 1) {
+          window.history.go(-2);
+        } else {
+          window.location.href = "about:blank";
+        }
+      };
+
+      const handleAuthSubmit = (e) => {
+        e.preventDefault();
+        setAuthErr('');
+        const { email, password } = authForm;
+        if (authModal.tab === 'login') {
+          auth.signInWithEmailAndPassword(email, password)
+            .then(() => {
+              setAuthModal({ isOpen: false, tab: 'login' });
+              setAuthForm({ email: '', password: '' });
+              showToast("Logged in successfully.", "success");
+            })
+            .catch(err => setAuthErr(err.message));
+        } else {
+          auth.createUserWithEmailAndPassword(email, password)
+            .then(() => {
+              setAuthModal({ isOpen: false, tab: 'login' });
+              setAuthForm({ email: '', password: '' });
+              showToast("Registered study node.", "success");
+            })
+            .catch(err => setAuthErr(err.message));
+        }
+      };
+
+      const handleGoogleSignIn = () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider)
+          .then(() => {
+            setAuthModal({ isOpen: false, tab: 'login' });
+            showToast("Signed in securely.", "success");
+          })
+          .catch(err => setAuthErr(err.message));
+      };
+
+      // Dynamic container-fullscreen handler to allow absolute exit button layers without clipping video size
+      const toggleFullscreenAndRotate = async () => {
+        const wrapper = videoWrapperRef.current;
+        if (!wrapper) return;
+
+        try {
+          if (!document.fullscreenElement) {
+            if (wrapper.requestFullscreen) {
+              await wrapper.requestFullscreen();
+            } else if (wrapper.webkitRequestFullscreen) {
+              await wrapper.webkitRequestFullscreen();
+            }
+            
+            // Try locking screen to landscape on compatible devices
+            if (screen.orientation && screen.orientation.lock) {
+              await screen.orientation.lock('landscape').catch((err) => {
+                console.log("Device orientation lock bypassed:", err);
+              });
+            }
+            setIsFullscreen(true);
+          } else {
+            if (document.exitFullscreen) {
+              await document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+              await document.webkitExitFullscreen();
+            }
+            
+            if (screen.orientation && screen.orientation.unlock) {
+              screen.orientation.unlock();
+            }
+            setIsFullscreen(false);
+          }
+        } catch (error) {
+          console.error("Orientation Lock Action interrupted:", error);
+        }
+      };
+
+      const handleLogout = () => {
+        auth.signOut().then(() => {
+          setActiveTab('home');
+          showToast("Session cleared.");
+        });
+      };
+
+      const trendingLectures = useMemo(() => {
+        return videos.filter(v => v.isTrending === true || v.isTrending === "true");
+      }, [videos]);
+
+      // Unique Authors/Channels extraction
+      const uniqueAuthors = useMemo(() => {
+        const set = new Set();
+        videos.forEach(v => {
+          if (v.channelName) set.add(v.channelName);
+        });
+        return ["ALL", ...Array.from(set)];
+      }, [videos]);
+
+      const filteredLearningVideos = useMemo(() => {
+        return videos.filter(v => {
+          const catMatch = learningCategory === "ALL" || v.category === learningCategory;
+          const searchMatch = searchQuery === "" || 
+            v.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+            v.channelName.toLowerCase().includes(searchQuery.toLowerCase());
+          const authorMatch = selectedAuthor === "ALL" || v.channelName === selectedAuthor;
+          return catMatch && searchMatch && authorMatch;
+        });
+      }, [videos, learningCategory, searchQuery, selectedAuthor]);
+
+      const filteredTrendingVideos = useMemo(() => {
+        return trendingLectures.filter(v => {
+          const catMatch = trendingCategory === "ALL" || v.category === trendingCategory;
+          const searchMatch = searchQuery === "" || v.title.toLowerCase().includes(searchQuery.toLowerCase());
+          return catMatch && searchMatch;
+        });
+      }, [trendingLectures, trendingCategory, searchQuery]);
+
+      // Category-wise filters for bookmarks, history, and admin panels
+      const filteredBookmarks = useMemo(() => {
+        return Object.values(bookmarks).filter(v => {
+          return bookmarkFilter === "ALL" || v.category === bookmarkFilter;
+        });
+      }, [bookmarks, bookmarkFilter]);
+
+      const filteredHistory = useMemo(() => {
+        return Object.values(history).filter(v => {
+          return historyFilter === "ALL" || v.category === historyFilter;
+        });
+      }, [history, historyFilter]);
+
+      const filteredAdminVideos = useMemo(() => {
+        return videos.filter(v => {
+          return adminCategoryFilter === "ALL" || v.category === adminCategoryFilter;
+        });
+      }, [videos, adminCategoryFilter]);
+
+      return (
+        <div className="min-h-screen flex flex-col md:flex-row text-slate-100 font-sans bg-black">
+
+          {/* ==================== DESKTOP NAVIGATION SIDEBAR ==================== */}
+          <aside className="hidden md:flex flex-col justify-between fixed inset-y-0 left-0 w-64 bg-amoled-950 border-r border-white/5 z-40 p-5">
+            <div>
+              
+              {/* Ultra Modern Redesigned Infinite Animated Logo */}
+              <div className="flex items-center gap-3 px-3 py-4 border-b border-white/5 mb-6 cursor-pointer group" onClick={() => setActiveTab('home')}>
+                <AnimatedLogo />
+                <div className="flex flex-col">
+                  <span className="font-display font-extrabold text-2xl tracking-tighter text-white group-hover:text-brand-500 transition-colors leading-none">EduTube</span>
+                  <span className="text-[8px] text-slate-500 tracking-widest uppercase font-bold mt-1">Study Engine</span>
+                </div>
+              </div>
+
+              {/* Sidebar Tabs panel */}
+              <nav className="space-y-1">
+                {[
+                  { id: 'home', label: 'Home Page', icon: 'fa-house' },
+                  { id: 'learning', label: 'Learning Desk', icon: 'fa-graduation-cap' },
+                  { id: 'trending', label: 'Trending Feed', icon: 'fa-fire-flame-curved' },
+                  { id: 'bookmark', label: 'Bookmarks Saved', icon: 'fa-heart', locked: !user },
+                  { id: 'history', label: 'Watch Records', icon: 'fa-history', locked: !user }
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all duration-200 ${activeTab === item.id ? 'bg-brand-500/10 border border-brand-500/25 text-brand-500' : 'text-slate-400 hover:bg-amoled-850 hover:text-white border border-transparent'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <i className={`fa-solid ${item.icon} text-base`}></i>
+                      <span>{item.label}</span>
+                    </div>
+                    {item.locked && <i className="fa-solid fa-lock text-xs text-slate-500"></i>}
+                  </button>
+                ))}
+
+                {isAdmin && (
+                  <button 
+                    onClick={() => setActiveTab('admin')}
+                    className={`w-full flex items-center gap-3 px-4 py-3 mt-4 rounded-xl text-xs font-bold border transition-all duration-200 ${activeTab === 'admin' ? 'bg-brand-500/10 border-brand-500/30 text-brand-500' : 'bg-amoled-850 border-white/5 text-purple-400 hover:bg-amoled-800'}`}
+                  >
+                    <i className="fa-solid fa-screwdriver-wrench text-sm"></i>
+                    <span>ADMIN CONTROLS</span>
+                  </button>
+                )}
+              </nav>
+            </div>
+
+            {/* Bottom Profile Info Card */}
+            <div className="border-t border-white/5 pt-4 bg-amoled-900/60 p-2 rounded-xl">
+              {user ? (
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-brand-500/10 border border-brand-500/25 flex items-center justify-center text-brand-500 font-bold text-sm">
+                    {user.email[0].toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-slate-200 truncate">{user.email}</p>
+                    <p className="text-[9px] text-brand-500 font-bold uppercase tracking-widest">{isAdmin ? 'ADMIN' : 'STUDENT'}</p>
+                  </div>
+                </div>
+              ) : (
+                <button 
+                  onClick={() => setAuthModal({ isOpen: true, tab: 'login' })}
+                  className="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg transition-all"
+                >
+                  Join Desk
+                </button>
+              )}
+            </div>
+          </aside>
+
+          {/* ==================== MOBILE & DESKTOP HEADER LAYOUT ==================== */}
+          <div className="flex-1 flex flex-col md:pl-64 pb-20 md:pb-0 min-w-0">
+
+            {/* HEADER COMPONENT */}
+            <header className="h-16 sticky top-0 bg-black/95 border-b border-white/5 z-30 px-4 md:px-8 flex items-center justify-between">
+              
+              {/* Mobile vector logo */}
+              <div className="flex items-center gap-3 md:hidden" onClick={() => setActiveTab('home')}>
+                <AnimatedLogo />
+                <h1 className="font-display font-black text-2xl tracking-tighter text-white select-none">
+                  EduTube
+                </h1>
+              </div>
+
+              {/* Desktop Header Text Info */}
+              <div className="hidden md:block font-display font-extrabold text-sm tracking-wider uppercase text-brand-500 bg-brand-500/10 px-4 py-1.5 rounded-full border border-brand-500/25">
+                Keep Study
+              </div>
+
+              {/* Profile dropdown controls */}
+              <div className="flex items-center gap-3">
+                {user ? (
+                  <div className="relative" ref={profileMenuRef}>
+                    <button 
+                      onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                      className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center border border-white/10 hover:scale-105 transition-transform"
+                    >
+                      {user.email[0].toUpperCase()}
+                    </button>
+                    
+                    {showProfileDropdown && (
+                      <div className="absolute right-0 mt-2 w-56 bg-amoled-900 border border-white/5 rounded-xl shadow-2xl p-1.5 z-50 space-y-0.5">
+                        <div className="px-3 py-2 text-[10px] text-slate-500 font-bold uppercase tracking-wider border-b border-white/5 mb-1">
+                          Account Panels
+                        </div>
+                        <button 
+                          onClick={() => {
+                            setShowProfileDropdown(false);
+                            setPopup({
+                              isOpen: true,
+                              title: "System Release Version (v1.0.0)",
+                              content: "Platform Build Framework: v1.0.0\n\nModular System Features:\n• Advanced client-side React processing\n• Realtime Client Local Cache Buffer (Fallback system)\n• High density Google Flow responsive layouts\n• Secure token-based user database pathing"
+                            });
+                          }}
+                          className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-amoled-850 rounded-lg flex items-center gap-2"
+                        >
+                          <i className="fa-solid fa-code-branch text-brand-500 text-xs"></i>
+                          <span>Version - 1.0.0</span>
+                        </button>
+
+                        <button 
+                          onClick={() => {
+                            setShowProfileDropdown(false);
+                            setPopup({
+                              isOpen: true,
+                              title: "Platform Privacy Policy",
+                              content: "Secure Privacy Parameters:\n\n1. Security: Mapped bookmark parameters and studied history metrics are tied directly to Firebase Auth endpoints."
+                            });
+                          }}
+                          className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-amoled-850 rounded-lg flex items-center gap-2"
+                        >
+                          <i className="fa-solid fa-fingerprint text-brand-500 text-xs"></i>
+                          <span>Privacy Policy</span>
+                        </button>
+
+                        <button 
+                          onClick={() => {
+                            setShowProfileDropdown(false);
+                            setPopup({
+                              isOpen: true,
+                              title: "Content Disclaimer Notice",
+                              content: "Intellectual Property Policy:\n\n1. Public Content Indexing: Media content references listed inside the learning panels are public links sourced through standard YouTube configurations."
+                            });
+                          }}
+                          className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-amoled-850 rounded-lg flex items-center gap-2"
+                        >
+                          <i className="fa-solid fa-circle-info text-brand-500 text-xs"></i>
+                          <span>Disclaimer</span>
+                        </button>
+
+                        <button 
+                          onClick={() => {
+                            setShowProfileDropdown(false);
+                            setPopup({
+                              isOpen: true,
+                              title: "Contact Desktop Desk",
+                              content: "Helpdesk Administration Support:\n\nReach the platform's primary admin core directly below for catalog updates, queries, or partnership suggestions."
+                            });
+                          }}
+                          className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-amoled-850 rounded-lg flex items-center gap-2"
+                        >
+                          <i className="fa-solid fa-headset text-brand-500 text-xs"></i>
+                          <span>Contact Us</span>
+                        </button>
+
+                        <button 
+                          onClick={() => {
+                            setShowProfileDropdown(false);
+                            promptConfirm("Do you want to sign out from this device?", handleLogout);
+                          }}
+                          className="w-full text-left px-3 py-2 text-xs text-rose-400 hover:bg-rose-950/25 rounded-lg flex items-center gap-2 border-t border-white/5 mt-1"
+                        >
+                          <i className="fa-solid fa-power-off text-rose-500 text-xs"></i>
+                          <span>Sign Out</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <button 
+                    onClick={() => setAuthModal({ isOpen: true, tab: 'login' })}
+                    className="px-4 py-1.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-lg shadow-lg"
+                  >
+                    Login
+                  </button>
+                )}
+              </div>
+            </header>
+
+            {/* ==================== ACTIVE VIEW SWITCHBOARD ==================== */}
+            <main className="flex-grow p-4 md:p-8 space-y-12">
+
+              {/* VIEW 1: HOME PAGE */}
+              {activeTab === 'home' && (
+                <div className="space-y-20 pb-12">
+                  
+                  {/* Hero section with automated backdrop slideshow of video thumbnails */}
+                  <div className="relative h-[28rem] rounded-3xl overflow-hidden border border-white/5 flex flex-col justify-end p-6 md:p-14 shadow-2xl bg-black">
+                    
+                    {/* Slideshow of Video Thumbnails with fade transition behind the text content */}
+                    <div className="absolute inset-0 z-0">
+                      {slideshowSource.length > 0 ? (
+                        slideshowSource.map((v, i) => (
+                          <img 
+                            key={v.id}
+                            src={getThumbnail(v.videoId)} 
+                            alt="Slide backdrop" 
+                            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1500 ease-in-out ${i === slideIndex ? 'opacity-30' : 'opacity-0'} brightness-[0.35] contrast-125`}
+                            onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80" }}
+                          />
+                        ))
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-brand-950/20 to-transparent"></div>
+                      )}
+                      
+                      {/* Darkened visual overlays and absolute layout blur filter to protect structural readability */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/85 to-black/45"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-transparent to-black/30"></div>
+                      <div className="absolute inset-0 backdrop-blur-[6px]"></div>
+                    </div>
+
+                    {/* Content texts positioned inside banner */}
+                    <div className="relative z-10 space-y-4 max-w-3xl">
+                      {/* Highly Stylized Elegant Brand Font Style with Back-Glow */}
+                      <h1 className="font-display font-black text-6xl md:text-8xl tracking-tight leading-none animate-float-slow select-none bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-brand-500 drop-shadow-[0_5px_15px_rgba(168,85,247,0.3)]">
+                        Edu<span className="text-brand-500 relative">Tube<span className="absolute bottom-1 left-0 w-full h-1 bg-brand-500 rounded-full blur-[1px]"></span></span>
+                      </h1>
+                      
+                      {/* Sub-tagline typewriter display */}
+                      <div className="h-6 flex items-center">
+                        <span className="text-xs md:text-sm text-brand-500 font-semibold tracking-wider flex items-center uppercase select-none">
+                          <i className="fa-solid fa-code text-[11px] mr-2 text-brand-500 animate-pulse"></i>
+                          {runningTagline}
+                          <span className="w-1.5 h-4 bg-brand-500 ml-1 inline-block animate-pulse"></span>
+                        </span>
+                      </div>
+
+                      <p className="text-slate-300 text-xs md:text-sm max-w-xl leading-relaxed font-medium">
+                        A modern, high-contrast academic dashboard hosting verified engineering classes, core physical matrices, and future artificial programming modules.
+                      </p>
+
+                      <div className="flex flex-wrap gap-3.5 pt-2">
+                        <button 
+                          onClick={() => setActiveTab('learning')} 
+                          className="px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-lg transition-transform hover:scale-[1.03]"
+                        >
+                          Explore Learning
+                        </button>
+                        <button 
+                          onClick={() => setActiveTab('trending')} 
+                          className="px-6 py-3 bg-amoled-800 border border-white/5 hover:bg-amoled-750 text-slate-300 font-bold text-xs rounded-xl transition-colors"
+                        >
+                          Trending Feed
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* CAROUSEL SECTION - Automated continuous marquee move */}
+                  <Reveal>
+                    <div className="space-y-6">
+                      <div className="space-y-1">
+                        <h2 className="font-display font-extrabold text-2xl text-white tracking-tight">Academic Chapters</h2>
+                        <p className="text-xs text-slate-500">Continuous interactive flow. Hover to pause.</p>
+                      </div>
+
+                      {/* Infinite Continuous Moving Track for Category Boxes */}
+                      <div className="overflow-hidden relative w-full py-2 bg-amoled-950/40 rounded-3xl border border-white/5">
+                        <div className="animate-marquee-left flex gap-5">
+                          {/* Triplicated contents for seamless continuous rendering */}
+                          {[...CAROUSEL_METADATA, ...CAROUSEL_METADATA, ...CAROUSEL_METADATA].map((cat, idx) => (
+                            <div 
+                              key={idx}
+                              onClick={() => {
+                                setLearningCategory(cat.name);
+                                setActiveTab('learning');
+                              }}
+                              className="w-60 h-44 rounded-2xl p-5 border border-white/5 bg-amoled-900 hover:bg-amoled-900/80 hover:border-brand-500/50 flex flex-col justify-between flex-shrink-0 cursor-pointer relative group transition-all duration-300 overflow-hidden"
+                            >
+                              <div className={`absolute -right-4 -top-4 w-20 h-20 bg-gradient-to-tr ${cat.glow} opacity-10 filter blur-xl group-hover:opacity-30 transition-opacity`}></div>
+                              
+                              {/* Matching Art/Texture overlay */}
+                              <TextureOverlay type={cat.texture} />
+
+                              <div className="flex items-center justify-between relative z-10">
+                                <div className="w-10 h-10 bg-white/5 border border-white/5 rounded-xl flex items-center justify-center text-slate-200 group-hover:text-brand-500 group-hover:bg-brand-500/10 transition-colors">
+                                  <i className={`fa-solid ${cat.icon} text-base`}></i>
+                                </div>
+                                <span className="text-[9px] bg-white/5 text-slate-500 border border-white/5 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">{cat.tag}</span>
+                              </div>
+
+                              <div className="space-y-1 relative z-10">
+                                <p className="font-display font-extrabold text-lg text-white group-hover:text-brand-500 transition-colors">{cat.name}</p>
+                                <p className="text-[10px] text-slate-500 leading-none">{cat.count}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </Reveal>
+
+                  {/* STRUCTURED COURSE LEARNING SECTION */}
+                  <Reveal>
+                    <div className="space-y-6">
+                      <div className="space-y-1">
+                        <h2 className="font-display font-extrabold text-2xl text-white tracking-tight">Structured Course Learning</h2>
+                        <p className="text-xs text-slate-500">Major academic segments covered in our streams</p>
+                      </div>
+
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        {[
+                          { key: "PHYSICS", title: "JEE Advanced", desc: "Kinematics, Solid Mechanics & Mapped Calculus chapters.", icon: "fa-atom", border: "hover:border-blue-500/35", texture: "physics" },
+                          { key: "BIOLOGY", title: "NEET Foundations", desc: "Organic mechanisms, botanical pathways & physical structures.", icon: "fa-stethoscope", border: "hover:border-emerald-500/35", texture: "biology" },
+                          { key: "NEURAL", title: "AI & ML Dev", desc: "Core neural layers, Python libraries & advanced model training.", icon: "fa-robot", border: "hover:border-purple-500/35", texture: "ai" },
+                          { key: "DEPLOY", title: "FullStack Systems", desc: "Version controls, deployment frameworks & server streams.", icon: "fa-code", border: "hover:border-violet-500/35", texture: "deploy" }
+                        ].map((item, index) => (
+                          <div 
+                            key={index} 
+                            className={`p-5 bg-amoled-900 border border-white/5 rounded-2xl space-y-4 relative overflow-hidden group transition-all duration-300 ${item.border}`}
+                          >
+                            {/* Matching Art/Texture Overlay */}
+                            <TextureOverlay type={item.texture} />
+
+                            <div className="flex items-center justify-between relative z-10">
+                              <span className="text-[8px] border border-white/5 bg-white/5 px-2 py-0.5 rounded text-brand-400 font-bold uppercase tracking-wider">{item.key}</span>
+                              <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-slate-400 group-hover:text-brand-500 transition-colors">
+                                <i className={`fa-solid ${item.icon} text-sm`}></i>
+                              </div>
+                            </div>
+                            <div className="space-y-1 relative z-10">
+                              <p className="text-xs font-bold text-slate-200 group-hover:text-brand-400 transition-colors">{item.title}</p>
+                              <p className="text-[10px] text-slate-500 leading-relaxed font-medium">{item.desc}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </Reveal>
+
+                  {/* TRENDING VIDEO HORIZONTAL SLIDER - Auto moving flow */}
+                  {trendingLectures.length > 0 && (
+                    <Reveal>
+                      <div className="space-y-6">
+                        <div className="space-y-1">
+                          <h2 className="font-display font-extrabold text-2xl text-white tracking-tight">Spotlight Courses</h2>
+                          <p className="text-xs text-slate-500">Curated lectures showing high engagement metrics. Hover to pause.</p>
+                        </div>
+                        
+                        {/* Auto sliding marquee track for Trending Videos */}
+                        <div className="overflow-hidden relative w-full py-2 bg-amoled-950/40 rounded-3xl border border-white/5">
+                          <div className="animate-marquee-right flex gap-6">
+                            {[...trendingLectures, ...trendingLectures, ...trendingLectures].map((v, index) => (
+                              <div key={`${v.id}-${index}`} className="w-[17.5rem] flex-shrink-0">
+                                <VideoCard 
+                                  video={v} 
+                                  isBookmarked={!!bookmarks[v.id]}
+                                  onBookmark={toggleBookmark}
+                                  onPlay={handlePlayVideo} 
+                                  homeSmallThumb={true}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </Reveal>
+                  )}
+
+                  {/* Platforms FAQ Section */}
+                  <Reveal>
+                    <div className="space-y-6">
+                      <div className="text-center space-y-1">
+                        <h3 className="font-display font-extrabold text-2xl text-white tracking-tight">Core FAQs</h3>
+                        <p className="text-xs text-slate-500">Understanding EduTube services</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+                        {[
+                          { q: "Is registration required to play lectures?", a: "No. All cataloged materials are open and streamable. Registrations strictly triggers personal bookmark decks and history logs." },
+                          { q: "What does the 'EduTube' category specify?", a: "Original curations, platforms guides, and premium study hacks hosted by platform administrators directly." },
+                          { q: "Can I watch live streams inside this site?", a: "Yes. The embedded player dynamically accepts and reproduces live YouTube stream links securely." },
+                          { q: "How are video thumb maps loaded?", a: "Our code parses linked YouTube streams directly, fetching high-definition max-res thumbnail maps dynamically." }
+                        ].map((faq, idx) => (
+                          <div key={idx} className="p-4 bg-amoled-900 border border-white/5 rounded-xl space-y-1.5">
+                            <p className="text-xs font-bold text-white flex items-center gap-2">
+                              <i className="fa-solid fa-circle-question text-brand-500 text-[10px]"></i>
+                              <span>{faq.q}</span>
+                            </p>
+                            <p className="text-[10px] text-slate-400 leading-relaxed font-medium">{faq.a}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </Reveal>
+
+                </div>
+              )}
+
+              {/* VIEW 2: LEARNING HUB */}
+              {activeTab === 'learning' && (
+                <div className="space-y-8">
+                  
+                  {/* Category Nav with Sliding Line Effect */}
+                  <div className="border-b border-white/5 overflow-x-auto no-scrollbar">
+                    <div className="flex gap-8 min-w-max pb-1 relative">
+                      {CATEGORIES.map(category => {
+                        const isActive = learningCategory === category;
+                        return (
+                          <button
+                            key={category}
+                            onClick={() => setLearningCategory(category)}
+                            className={`pb-3.5 text-xs font-bold relative transition-colors duration-300 uppercase tracking-wider ${isActive ? 'text-brand-500' : 'text-slate-400 hover:text-slate-200'}`}
+                          >
+                            {category}
+                            {isActive && (
+                              <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-brand-500 rounded-t-full transition-all duration-300"></div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Search and Channel Filters */}
+                  <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                    <div className="relative flex-1">
+                      <input 
+                        type="text" 
+                        placeholder="Search lectures..." 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-amoled-900 border border-white/5 rounded-xl pl-10 pr-4 py-3 text-xs focus:outline-none focus:border-brand-500 text-slate-200"
+                      />
+                      <i className="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-500 text-xs"></i>
+                    </div>
+
+                    {/* Author/Channel Selector Dropdown Filter */}
+                    <div className="flex items-center gap-2 bg-amoled-900 border border-white/5 rounded-xl px-3 py-1">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider whitespace-nowrap">Channel:</span>
+                      <select
+                        value={selectedAuthor}
+                        onChange={(e) => setSelectedAuthor(e.target.value)}
+                        className="bg-transparent text-xs text-slate-200 font-bold focus:outline-none min-w-[130px] h-10 cursor-pointer"
+                      >
+                        {uniqueAuthors.map(auth => (
+                          <option key={auth} value={auth} className="bg-black">{auth}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h2 className="font-display font-extrabold text-xl text-white mb-6">
+                      {learningCategory} Lecture Catalogue
+                    </h2>
+
+                    {loading ? (
+                      <div className="flex justify-center py-24">
+                        <div className="w-8 h-8 border-4 border-brand-500/20 border-t-brand-500 rounded-full animate-spin"></div>
+                      </div>
+                    ) : filteredLearningVideos.length === 0 ? (
+                      <div className="text-center py-20 bg-amoled-900 border border-white/5 rounded-2xl">
+                        <i className="fa-solid fa-video-slash text-3xl text-slate-600 mb-2"></i>
+                        <p className="text-xs text-slate-400">No indexing records found under specified filter metrics.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {filteredLearningVideos.map(v => (
+                          <VideoCard 
+                            key={v.id} 
+                            video={v} 
+                            isBookmarked={!!bookmarks[v.id]}
+                            onBookmark={toggleBookmark}
+                            onPlay={handlePlayVideo} 
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* VIEW 3: TRENDING INDEX MODULE */}
+              {activeTab === 'trending' && (
+                <div className="space-y-8">
+                  
+                  {/* Category Switch Slider for Trending Index */}
+                  <div className="border-b border-white/5 overflow-x-auto">
+                    <div className="flex gap-8 min-w-max pb-1 relative">
+                      {CATEGORIES.map(category => {
+                        const isActive = trendingCategory === category;
+                        return (
+                          <button
+                            key={category}
+                            onClick={() => setTrendingCategory(category)}
+                            className={`pb-3.5 text-xs font-bold relative transition-colors duration-300 uppercase tracking-wider ${isActive ? 'text-brand-500' : 'text-slate-400 hover:text-slate-200'}`}
+                          >
+                            {category}
+                            {isActive && (
+                              <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-brand-500 rounded-t-full"></div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h2 className="font-display font-extrabold text-xl text-white mb-6">
+                      Featured Trend Tracks - {trendingCategory}
+                    </h2>
+
+                    {loading ? (
+                      <div className="flex justify-center py-24">
+                        <div className="w-8 h-8 border-4 border-brand-500/20 border-t-brand-500 rounded-full animate-spin"></div>
+                      </div>
+                    ) : filteredTrendingVideos.length === 0 ? (
+                      <div className="text-center py-20 bg-amoled-900 border border-white/5 rounded-2xl">
+                        <i className="fa-solid fa-fire text-3xl text-slate-600 mb-2"></i>
+                        <p className="text-xs text-slate-400">No trending records found under category "{trendingCategory}".</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {filteredTrendingVideos.map(v => (
+                          <VideoCard 
+                            key={v.id} 
+                            video={v} 
+                            isBookmarked={!!bookmarks[v.id]}
+                            onBookmark={toggleBookmark}
+                            onPlay={handlePlayVideo} 
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* VIEW 4: BOOKMARKS with category wise filter */}
+              {activeTab === 'bookmark' && (
+                <div className="space-y-6">
+                  {!user ? (
+                    /* Beautiful locked message overlay instead of blank screen crash */
+                    <div className="text-center py-20 bg-amoled-900 border border-white/5 rounded-2xl max-w-md mx-auto space-y-4 p-6">
+                      <div className="w-16 h-16 rounded-full bg-brand-500/10 text-brand-500 border border-brand-500/20 flex items-center justify-center mx-auto">
+                        <i className="fa-solid fa-lock text-2xl animate-bounce"></i>
+                      </div>
+                      <h3 className="font-display font-bold text-lg text-slate-100">Bookmarks Locked</h3>
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        You can only access and save bookmarked classes when you are signed into your EduTube student desk.
+                      </p>
+                      <button 
+                        onClick={() => setAuthModal({ isOpen: true, tab: 'login' })}
+                        className="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-lg transition-all"
+                      >
+                        Login / Register
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <h2 className="font-display font-extrabold text-xl text-white">Your Bookmarked Classes</h2>
+                        
+                        {/* Category Filter for Bookmark list */}
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar max-w-full pb-1">
+                          {CATEGORIES.map(category => (
+                            <button
+                              key={category}
+                              onClick={() => setBookmarkFilter(category)}
+                              className={`px-3 py-1 text-[10px] font-bold rounded-lg uppercase tracking-wide border transition-all ${bookmarkFilter === category ? 'bg-brand-500/10 border-brand-500 text-brand-500' : 'bg-amoled-900 border-white/5 text-slate-400 hover:text-white'}`}
+                            >
+                              {category}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {filteredBookmarks.length === 0 ? (
+                        <div className="text-center py-20 bg-amoled-900 border border-white/5 rounded-2xl">
+                          <i className="fa-solid fa-heart text-3xl text-slate-600 mb-2"></i>
+                          <p className="text-xs text-slate-400">No matching bookmarked items found.</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                          {filteredBookmarks.map(v => (
+                            <VideoCard 
+                              key={v.id} 
+                              video={v} 
+                              isBookmarked={true}
+                              onBookmark={toggleBookmark}
+                              onPlay={handlePlayVideo} 
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* VIEW 5: HISTORY LOGS with category wise filter */}
+              {activeTab === 'history' && (
+                <div className="space-y-6">
+                  {!user ? (
+                    /* Beautiful locked message overlay instead of blank screen crash */
+                    <div className="text-center py-20 bg-amoled-900 border border-white/5 rounded-2xl max-w-md mx-auto space-y-4 p-6">
+                      <div className="w-16 h-16 rounded-full bg-brand-500/10 text-brand-500 border border-brand-500/25 flex items-center justify-center mx-auto">
+                        <i className="fa-solid fa-lock text-2xl animate-bounce"></i>
+                      </div>
+                      <h3 className="font-display font-bold text-lg text-slate-100">Study History Locked</h3>
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        Your watched class history metrics, logs, and progress tracking indicators are restricted to authenticated users.
+                      </p>
+                      <button 
+                        onClick={() => setAuthModal({ isOpen: true, tab: 'login' })}
+                        className="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-lg transition-all"
+                      >
+                        Login / Register
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex flex-col gap-4">
+                        <div className="flex items-center justify-between">
+                          <h2 className="font-display font-extrabold text-xl text-white">Study History Records</h2>
+                          {Object.keys(history).length > 0 && (
+                            <button 
+                              onClick={() => {
+                                promptConfirm("Are you sure you want to clear your entire watch history logs?", () => {
+                                  setHistory({});
+                                  localStorage.setItem('edutube_history', '{}');
+                                  if (user) {
+                                    db.ref(`users/${user.uid}/history`).remove()
+                                      .then(() => showToast("History logged records cleared."));
+                                  }
+                                });
+                              }}
+                              className="text-xs text-rose-400 hover:text-rose-300 font-bold"
+                            >
+                              Clear All History
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Category Filter for History logs */}
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar max-w-full pb-1">
+                          {CATEGORIES.map(category => (
+                            <button
+                              key={category}
+                              onClick={() => setHistoryFilter(category)}
+                              className={`px-3 py-1 text-[10px] font-bold rounded-lg uppercase tracking-wide border transition-all ${historyFilter === category ? 'bg-brand-500/10 border-brand-500 text-brand-500' : 'bg-amoled-900 border-white/5 text-slate-400 hover:text-white'}`}
+                            >
+                              {category}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {filteredHistory.length === 0 ? (
+                        <div className="text-center py-20 bg-amoled-900 border border-white/5 rounded-2xl">
+                          <i className="fa-solid fa-clock text-3xl text-slate-600 mb-2"></i>
+                          <p className="text-xs text-slate-400">No matching history logs found.</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                          {filteredHistory.map(v => (
+                            <VideoCard 
+                              key={v.id} 
+                              video={v} 
+                              isBookmarked={!!bookmarks[v.id]}
+                              onBookmark={toggleBookmark}
+                              onPlay={handlePlayVideo} 
+                              showHistoryMenu={true}
+                              onDeleteHistory={handleDeleteHistoryItem}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* VIEW 6: ADMIN PANEL */}
+              {activeTab === 'admin' && isAdmin && (
+                <div className="space-y-8">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-6">
+                    <div>
+                      <h2 className="font-display font-extrabold text-2xl text-white">Admin Control Desk</h2>
+                      <p className="text-xs text-slate-400">Add, configure, or purge catalog elements</p>
+                    </div>
+                    <button 
+                      onClick={() => setActiveTab('home')}
+                      className="px-4 py-2 bg-amoled-900 border border-white/10 hover:bg-amoled-850 text-slate-300 text-xs font-bold rounded-xl"
+                    >
+                      Close Workspace
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    
+                    {/* Admin Input Panel */}
+                    <div className="lg:col-span-5 bg-amoled-900 border border-white/5 rounded-2xl p-6 h-fit space-y-4 shadow-xl">
+                      <h3 className="font-bold text-slate-100 flex items-center gap-2 text-sm uppercase tracking-wide">
+                        <i className="fa-solid fa-terminal text-brand-500"></i>
+                        <span>{isAdminEditing ? 'Modify Node Elements' : 'Publish Class Module'}</span>
+                      </h3>
+
+                      <form onSubmit={handleSaveVideo} className="space-y-4">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Lecture Title</label>
+                          <input 
+                            type="text" 
+                            required
+                            placeholder="Thermodynamics Complete Matrices"
+                            value={adminForm.title}
+                            onChange={(e) => setAdminForm({ ...adminForm, title: e.target.value })}
+                            className="w-full bg-amoled-950 border border-white/10 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-brand-500 text-slate-200"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Category Link</label>
+                            <select 
+                              value={adminForm.category}
+                              onChange={(e) => setAdminForm({ ...adminForm, category: e.target.value })}
+                              className="w-full bg-amoled-950 border border-white/10 rounded-xl px-3 py-3 text-xs focus:outline-none focus:border-brand-500 text-slate-200"
+                            >
+                              {CATEGORIES.filter(c => c !== "ALL").map(c => (
+                                <option key={c} value={c}>{c}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Author / Channel</label>
+                            <input 
+                              type="text" 
+                              required
+                              placeholder="e.g. Unacademy"
+                              value={adminForm.channelName}
+                              onChange={(e) => setAdminForm({ ...adminForm, channelName: e.target.value })}
+                              className="w-full bg-amoled-950 border border-white/10 rounded-xl px-3 py-3 text-xs focus:outline-none focus:border-brand-500 text-slate-200"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">YouTube URL / Live Stream Link</label>
+                          <input 
+                            type="text" 
+                            required
+                            placeholder="https://www.youtube.com/watch?v=..."
+                            value={adminForm.youtubeUrl}
+                            onChange={(e) => setAdminForm({ ...adminForm, youtubeUrl: e.target.value })}
+                            className="w-full bg-amoled-950 border border-white/10 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-brand-500 text-slate-200"
+                          />
+                        </div>
+
+                        {adminForm.youtubeUrl && getYouTubeId(adminForm.youtubeUrl) && (
+                          <div className="p-3 bg-amoled-950 border border-white/5 rounded-xl flex items-center gap-3">
+                            <img 
+                              src={getThumbnail(getYouTubeId(adminForm.youtubeUrl))} 
+                              alt="Live preview thumbnail map" 
+                              className="w-20 aspect-video object-cover rounded"
+                            />
+                            <div className="text-[10px]">
+                              <p className="text-emerald-500 font-bold"><i className="fa-solid fa-circle-check"></i> System Linked</p>
+                              <p className="text-slate-400 truncate w-36">ID: {getYouTubeId(adminForm.youtubeUrl)}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-2">
+                          <input 
+                            type="checkbox" 
+                            id="adminIsTrendingCheck"
+                            checked={adminForm.isTrending}
+                            onChange={(e) => setAdminForm({ ...adminForm, isTrending: e.target.checked })}
+                            className="w-4 h-4 rounded accent-brand-500"
+                          />
+                          <label htmlFor="adminIsTrendingCheck" className="text-xs text-slate-300 font-medium cursor-pointer">
+                            Feature in Trending Index Module
+                          </label>
+                        </div>
+
+                        <div className="flex gap-2">
+                          {isAdminEditing && (
+                            <button 
+                              type="button" 
+                              onClick={resetAdminForm} 
+                              className="flex-1 py-3 bg-amoled-850 hover:bg-amoled-800 text-slate-300 rounded-xl text-xs font-semibold"
+                            >
+                              Cancel
+                            </button>
+                          )}
+                          <button 
+                            type="submit" 
+                            className="flex-1 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-colors"
+                          >
+                            {isAdminEditing ? 'Confirm Update' : 'Publish Stream'}
+                          </button>
+                        </div>
+
+                        {adminMsg && (
+                          <p className="text-xs text-center font-bold text-brand-500 bg-amoled-950 py-2 rounded-lg border border-white/5">{adminMsg}</p>
+                        )}
+                      </form>
+                    </div>
+
+                    {/* Admin Interactive Listing Cards with Category Filter Option */}
+                    <div className="lg:col-span-7 space-y-4">
+                      <div className="flex flex-col gap-4">
+                        <h3 className="font-bold text-slate-100 flex items-center justify-between text-sm uppercase tracking-wide">
+                          <span>Database Entries Mapped</span>
+                          <span className="text-xs text-slate-500 font-normal">{filteredAdminVideos.length} / {videos.length} mapped</span>
+                        </h3>
+
+                        {/* Category filter pills for admin entries */}
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar max-w-full pb-1">
+                          {CATEGORIES.map(category => (
+                            <button
+                              key={category}
+                              type="button"
+                              onClick={() => setAdminCategoryFilter(category)}
+                              className={`px-3 py-1 text-[10px] font-bold rounded-lg uppercase tracking-wide border transition-all ${adminCategoryFilter === category ? 'bg-brand-500/10 border-brand-500 text-brand-500' : 'bg-amoled-900 border-white/5 text-slate-400 hover:text-white'}`}
+                            >
+                              {category}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {filteredAdminVideos.length === 0 ? (
+                        <div className="text-center py-16 bg-amoled-900 border border-white/5 rounded-2xl">
+                          <i className="fa-solid fa-layer-group text-3xl text-slate-600 mb-2"></i>
+                          <p className="text-xs text-slate-400">No database entries found matching "{adminCategoryFilter}".</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {filteredAdminVideos.map(v => (
+                            <div key={v.id} className="bg-amoled-900 border border-white/5 rounded-xl p-3 flex gap-3 items-start relative hover:border-white/10 transition-all">
+                              <img 
+                                src={getThumbnail(v.videoId)} 
+                                alt={v.title}
+                                className="w-16 aspect-video object-cover rounded bg-amoled-950 flex-shrink-0 border border-white/5"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <span className="px-1.5 py-0.5 bg-amoled-950 text-brand-500 text-[9px] font-bold rounded border border-white/5 uppercase">{v.category}</span>
+                                {(v.isTrending === true || v.isTrending === "true") && (
+                                  <span className="ml-1 px-1.5 py-0.5 bg-amber-500/10 text-amber-500 text-[9px] font-bold rounded border border-white/5 uppercase">Trending</span>
+                                )}
+                                <h4 className="text-xs font-bold text-slate-200 truncate mt-1.5">{v.title}</h4>
+                                <p className="text-[10px] text-slate-500 truncate">{v.channelName}</p>
+                                
+                                <div className="flex gap-3 mt-2.5">
+                                  <button onClick={() => startEditVideo(v)} className="text-[10px] font-bold text-brand-500 hover:underline">Edit</button>
+                                  <button onClick={() => {
+                                    promptConfirm("Are you sure you want to permanently delete this video lecture?", () => {
+                                      db.ref(`videos/${v.id}`).remove()
+                                        .then(() => showToast("Lectures purged securely."));
+                                    });
+                                  }} className="text-[10px] font-bold text-rose-500 hover:underline">Purge</button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                </div>
+              )}
+
+            </main>
+
+            {/* PLATFORM SECURE PROFESSIONAL FOOTER */}
+            <footer className="mt-auto py-8 px-4 md:px-8 border-t border-white/5 bg-amoled-950 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p className="text-xs text-slate-500 text-center sm:text-left font-medium">
+                &copy; 2026 EduTube. All Rights Reserved.
+              </p>
+              <div className="flex gap-5 text-slate-500 text-xs font-semibold">
+                <span className="hover:text-slate-300 cursor-pointer" onClick={() => {
+                  setPopup({
+                    isOpen: true,
+                    title: "Platform Privacy Policy",
+                    content: "Secure Privacy Parameters:\n\n1. Security: Mapped bookmark parameters and studied history metrics are tied directly to Firebase Auth endpoints."
+                  });
+                }}>Privacy Policy</span>
+                <span>•</span>
+                <span className="hover:text-slate-300 cursor-pointer" onClick={() => {
+                  setPopup({
+                    isOpen: true,
+                    title: "Terms & Conditions",
+                    content: "These terms govern access of materials listed on this environment. By utilizing streaming frames, you authorize dynamic data indexings within cache protocols safely."
+                  });
+                }}>Terms of Use</span>
+              </div>
+            </footer>
+          </div>
+
+          {/* ==================== MOBILE NAVIGATION BOTTOM FOOTER ==================== */}
+          <footer className="fixed bottom-0 left-0 right-0 h-16 bg-black border-t border-white/5 flex items-center justify-around z-40 md:hidden px-2">
+            {[
+              { id: 'home', label: 'Home', icon: 'fa-house' },
+              { id: 'learning', label: 'Desk', icon: 'fa-graduation-cap' },
+              { id: 'trending', label: 'Hot', icon: 'fa-fire-flame-curved' },
+              { id: 'bookmark', label: 'Library', icon: 'fa-heart' },
+              { id: 'history', label: 'Logs', icon: 'fa-history' }
+            ].map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`flex flex-col items-center justify-center flex-grow py-1 transition-all ${isActive ? 'text-brand-500 scale-105' : 'text-slate-500'}`}
+                >
+                  <div className="relative">
+                    <i className={`fa-solid ${item.icon} text-base mb-0.5`}></i>
+                    {/* Tiny micro lock-badge overlay for mobile bottom nav for non-signed-in nodes */}
+                    {!user && (item.id === 'bookmark' || item.id === 'history') && (
+                      <span className="absolute -top-1.5 -right-1.5 text-[7px] bg-brand-600 text-white rounded-full w-3.5 h-3.5 flex items-center justify-center border border-black scale-90">
+                        <i className="fa-solid fa-lock"></i>
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[9px] font-bold tracking-tight">{item.label}</span>
+                </button>
+              );
+            })}
+          </footer>
+
+          {/* ========================================================== */}
+          {/*             CUSTOM UNIFIED OVERLAYS & MODALS               */}
+          {/* ========================================================== */}
+
+          {/* CUSTOM CONFIRMATION MODAL BAR */}
+          {globalConfirm.isOpen && (
+            <div className="fixed inset-0 bg-black/95 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-amoled-900 border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl space-y-5 text-center">
+                <div className="w-12 h-12 rounded-full bg-brand-500/10 text-brand-500 border border-brand-500/20 flex items-center justify-center mx-auto animate-pulse">
+                  <i className="fa-solid fa-circle-exclamation text-lg"></i>
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-slate-100">Verification Action</h4>
+                  <p className="text-xs text-slate-400 leading-relaxed">{globalConfirm.message}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setGlobalConfirm({ isOpen: false, message: '', onConfirm: null })}
+                    className="flex-1 py-2 bg-amoled-800 hover:bg-amoled-750 text-slate-300 text-xs font-bold rounded-xl"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={() => {
+                      if (globalConfirm.onConfirm) globalConfirm.onConfirm();
+                      setGlobalConfirm({ isOpen: false, message: '', onConfirm: null });
+                    }}
+                    className="flex-1 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-lg"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* CUSTOM STATUS MESSAGE TOAST BAR */}
+          {globalToast.isOpen && (
+            <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-sm px-4">
+              <div className="bg-amoled-900 border border-white/10 p-4 rounded-xl shadow-2xl flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-brand-500/20 text-brand-500 flex items-center justify-center text-xs">
+                  <i className="fa-solid fa-bell animate-bounce"></i>
+                </div>
+                <p className="text-xs font-semibold text-slate-200 flex-1">{globalToast.message}</p>
+              </div>
+            </div>
+          )}
+
+          {/* SYSTEM APP EXIT / BACK NAVIGATION CONFIRMATION INTERCEPT BAR */}
+          {exitModalOpen && (
+            <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
+              <div className="bg-gradient-to-b from-amoled-900 to-black border border-white/10 rounded-3xl p-8 w-full max-w-md shadow-2xl text-center space-y-6 animate-float-slow">
+                <div className="w-16 h-16 rounded-2xl bg-brand-500/10 text-brand-500 border border-brand-500/20 flex items-center justify-center mx-auto shadow-inner">
+                  {watchVideo ? (
+                    <i className="fa-solid fa-video-slash text-2xl text-brand-500 animate-pulse"></i>
+                  ) : (
+                    <i className="fa-solid fa-arrow-right-from-bracket text-2xl text-brand-500 animate-pulse"></i>
+                  )}
+                </div>
+                
+                {/* Dynamically adjust textual content depending on whether a stream layout is active */}
+                {watchVideo ? (
+                  <div className="space-y-2">
+                    <h3 className="font-display font-bold text-lg text-slate-100 uppercase tracking-tight">Stop Watching Lecture?</h3>
+                    <p className="text-xs text-slate-400 leading-relaxed px-2">
+                      Do you want to close the current stream frame and return to your learning dashboard catalog?
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <h3 className="font-display font-bold text-lg text-slate-100 uppercase tracking-tight">Confirm Exit Application</h3>
+                    <p className="text-xs text-slate-400 leading-relaxed px-2">
+                      Are you sure you want to exit? Your session history and current learning parameters are securely stored on cloud endpoints.
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  {watchVideo ? (
+                    <>
+                      <button 
+                        onClick={() => setExitModalOpen(false)}
+                        className="flex-1 py-3 bg-amoled-850 hover:bg-amoled-800 text-slate-200 text-xs font-bold rounded-xl border border-white/5"
+                      >
+                        Keep Watching
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setWatchVideo(null);
+                          setActiveTab(originTab); // Returns you to original active tab cleanly
+                          setExitModalOpen(false);
+                          showToast("Stream ended safely.", "info");
+                        }}
+                        className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white text-xs font-bold rounded-xl shadow-lg shadow-purple-950/25"
+                      >
+                        Stop Watching
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button 
+                        onClick={() => setExitModalOpen(false)}
+                        className="flex-1 py-3 bg-amoled-850 hover:bg-amoled-800 text-slate-200 text-xs font-bold rounded-xl border border-white/5"
+                      >
+                        Keep Studying
+                      </button>
+                      <button 
+                        onClick={confirmExitApp}
+                        className="flex-1 py-3 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 text-white text-xs font-bold rounded-xl shadow-lg shadow-red-950/20"
+                      >
+                        Exit Now
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* AUTHENTICATION MODAL (Resolved switch tabs and z-indexing priority layers) */}
+          {authModal.isOpen && (
+            <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
+              <div className="bg-amoled-900 border border-white/5 rounded-2xl w-full max-w-md p-6 space-y-6 shadow-2xl relative">
+                <button 
+                  onClick={() => setAuthModal({ ...authModal, isOpen: false })}
+                  className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-amoled-800 text-slate-400 hover:text-white flex items-center justify-center"
+                >
+                  <i className="fa-solid fa-xmark"></i>
+                </button>
+
+                {/* Tab selections - Resolved and secured by preventing premature page validations */}
+                <div className="flex border-b border-white/5 pb-1 relative">
+                  <button 
+                    type="button"
+                    onClick={() => setAuthModal({ ...authModal, tab: 'login' })}
+                    className={`flex-1 pb-3 text-xs font-bold uppercase tracking-wider text-center transition-colors ${authModal.tab === 'login' ? 'text-brand-500' : 'text-slate-400'}`}
+                  >
+                    Login
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setAuthModal({ ...authModal, tab: 'signup' })}
+                    className={`flex-1 pb-3 text-xs font-bold uppercase tracking-wider text-center transition-colors ${authModal.tab === 'signup' ? 'text-brand-500' : 'text-slate-400'}`}
+                  >
+                    Signup
+                  </button>
+                  <div className={`absolute bottom-0 h-0.5 w-1/2 bg-brand-500 rounded-full transition-transform duration-300 ${authModal.tab === 'signup' ? 'translate-x-full' : 'translate-x-0'}`}></div>
+                </div>
+
+                <div className="text-center space-y-1">
+                  <h3 className="font-display font-extrabold text-xl text-white">
+                    Welcome to EduTube
+                  </h3>
+                  <p className="text-xs text-slate-400">Join parameters and catalog personal bookmarks logs.</p>
+                </div>
+
+                <form onSubmit={handleAuthSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Email Address</label>
+                    <input 
+                      type="email" 
+                      required
+                      value={authForm.email}
+                      onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })}
+                      className="w-full bg-amoled-950 border border-white/10 rounded-xl px-4 py-3.5 text-xs focus:outline-none focus:border-brand-500 text-slate-200"
+                      placeholder="e.g. name@domain.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Password</label>
+                    <input 
+                      type="password" 
+                      required
+                      value={authForm.password}
+                      onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
+                      className="w-full bg-amoled-950 border border-white/10 rounded-xl px-4 py-3.5 text-xs focus:outline-none focus:border-brand-500 text-slate-200"
+                      placeholder="••••••••"
+                    />
+                  </div>
+
+                  {authErr && (
+                    <p className="text-xs text-rose-500 bg-rose-950/20 border border-rose-500/20 py-2 px-3 rounded-lg text-center font-bold">{authErr}</p>
+                  )}
+
+                  <button 
+                    type="submit" 
+                    className="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl transition-all"
+                  >
+                    {authModal.tab === 'login' ? 'Proceed with Login' : 'Complete Registration'}
+                  </button>
+                </form>
+
+                <div className="relative flex py-1 items-center">
+                  <div className="flex-grow border-t border-white/5"></div>
+                  <span className="flex-shrink mx-3 text-[10px] text-slate-500 font-bold tracking-wider uppercase">OR</span>
+                  <div className="flex-grow border-t border-white/5"></div>
+                </div>
+
+                <button 
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  className="w-full py-3.5 bg-amoled-950 border border-white/10 hover:bg-amoled-850 text-slate-200 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
+                >
+                  <i className="fa-brands fa-google text-brand-500"></i>
+                  <span>Continue with Google</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ACTIVE EMBEDDED STREAM RECEPTOR PLAYER (Refactored layout wrapper for absolute floating fullscreen exit button controls) */}
+          {watchVideo && (
+            <div className="fixed inset-0 bg-black/95 z-50 flex flex-col items-center justify-center p-4">
+              
+              {/* Fullscreen Wrapper Container */}
+              <div 
+                ref={videoWrapperRef}
+                className={`relative w-full max-w-4xl bg-amoled-900 border border-white/5 rounded-2xl overflow-hidden shadow-2xl flex flex-col transition-all ${isFullscreen ? 'w-screen h-screen max-w-none border-none rounded-none' : ''}`}
+              >
+                
+                {/* 1. Header (Hidden during active Fullscreen mode) */}
+                {!isFullscreen && (
+                  <div className="p-4 bg-amoled-950 flex items-center justify-between border-b border-white/5">
+                    <div className="truncate pr-4 flex items-center gap-2">
+                      <span className="px-2 py-0.5 bg-brand-500/10 border border-brand-500/20 text-brand-500 text-[9px] font-bold rounded uppercase">{watchVideo.category}</span>
+                      <span className="text-xs font-bold text-white truncate">{watchVideo.title}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {/* Full screen video isolate button */}
+                      <button 
+                        onClick={toggleFullscreenAndRotate}
+                        className="w-8 h-8 rounded-lg bg-amoled-850 text-slate-400 hover:text-white flex items-center justify-center transition-colors"
+                        title="Toggle Fullscreen Landscape"
+                      >
+                        <i className="fa-solid fa-expand"></i>
+                      </button>
+                      {/* Return back to starting tab on close */}
+                      <button 
+                        onClick={() => {
+                          setWatchVideo(null);
+                          setActiveTab(originTab); // Returns you back to your starting tab smoothly
+                          showToast("Returned to learning session.", "info");
+                        }}
+                        className="w-8 h-8 rounded-lg bg-amoled-850 text-slate-400 hover:text-white flex items-center justify-center transition-colors"
+                      >
+                        <i className="fa-solid fa-xmark"></i>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. Floating Exit Fullscreen Button (ONLY shown overlayed when Fullscreen mode is active) */}
+                {isFullscreen && (
+                  <button 
+                    onClick={toggleFullscreenAndRotate}
+                    className="absolute top-6 right-6 z-50 w-11 h-11 bg-black/40 backdrop-blur-md text-white hover:text-brand-500 rounded-full border border-white/10 flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-lg shadow-black/45"
+                    title="Exit Fullscreen"
+                  >
+                    <i className="fa-solid fa-compress text-sm"></i>
+                  </button>
+                )}
+
+                {/* 3. Secure video container viewport (Stretches fluidly to 100% when in Fullscreen) */}
+                <div className={`bg-black flex-grow ${isFullscreen ? 'w-full h-full' : 'aspect-video'}`}>
+                  <iframe 
+                    ref={iframeRef}
+                    width="100%" 
+                    height="100%" 
+                    src={`https://www.youtube.com/embed/${watchVideo.videoId}?autoplay=1&rel=0`} 
+                    title={watchVideo.title} 
+                    frameBorder="0" 
+                    className="w-full h-full animate-fade-in"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowFullScreen
+                  ></iframe>
+                </div>
+
+                {/* 4. Bottom bar (Hidden during active Fullscreen mode) */}
+                {!isFullscreen && (
+                  <div className="p-4 bg-amoled-950 flex items-center justify-between text-xs text-slate-500">
+                    <span className="font-bold text-slate-300">Channel Source: {watchVideo.channelName}</span>
+                    <span>Streaming via secure iFrame protocols</span>
+                  </div>
+                )}
+                
+              </div>
+            </div>
+          )}
+
+          {/* POP-UPS DIALOG */}
+          {popup.isOpen && (
+            <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-amoled-900 border border-white/5 rounded-2xl p-6 w-full max-w-sm shadow-2xl space-y-4">
+                <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                  <h3 className="font-display font-bold text-slate-200 text-sm">{popup.title}</h3>
+                  <button onClick={() => setPopup({ ...popup, isOpen: false })} className="text-slate-400 hover:text-white">
+                    <i className="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+                <p className="text-xs text-slate-400 leading-relaxed whitespace-pre-line">{popup.content}</p>
+                {popup.title.includes("Contact") && (
+                  <div className="p-3 bg-amoled-950 border border-white/5 rounded-xl flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-500">
+                      <i className="fa-solid fa-envelope"></i>
+                    </div>
+                    <div className="text-[10px]">
+                      <p className="text-slate-500 font-bold">ADMIN EMAIL</p>
+                      <a href="mailto:thepremanshu@gmail.com" className="text-brand-500 hover:underline font-bold">thepremanshu@gmail.com</a>
+                    </div>
+                  </div>
+                )}
+                <button 
+                  onClick={() => setPopup({ ...popup, isOpen: false })}
+                  className="w-full py-2 bg-amoled-800 hover:bg-amoled-750 text-slate-200 text-xs font-bold rounded-xl"
+                >
+                  Close Window
+                </button>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    // Reusable Custom Premium Video Card
+    function VideoCard({ video, isBookmarked, onBookmark, onPlay, showHistoryMenu, onDeleteHistory, homeSmallThumb }) {
+      const vidId = video.videoId;
+      const thumbnailImg = getThumbnail(vidId);
+      const [showDropdown, setShowDropdown] = useState(false);
+      const dropdownRef = useRef(null);
+
+      useEffect(() => {
+        function clickOutside(e) {
+          if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+            setShowDropdown(false);
+          }
+        }
+        document.addEventListener("mousedown", clickOutside);
+        return () => document.removeEventListener("mousedown", clickOutside);
+      }, []);
+
+      return (
+        <div className="group bg-amoled-900 border border-white/5 hover:border-brand-500/30 rounded-2xl overflow-hidden transition-all duration-300 flex flex-col h-full hover:-translate-y-1 hover:shadow-2xl relative">
+          
+          {/* Sizing of thumbnail decreased significantly inside Home-Page Spotlight slider if prop is matched */}
+          <div className={`relative overflow-hidden bg-amoled-950 ${homeSmallThumb ? 'aspect-[16/10]' : 'aspect-video'}`}>
+            <img 
+              src={thumbnailImg} 
+              alt={video.title} 
+              loading="lazy"
+              className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+              onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=640&q=80" }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-amoled-950 via-amoled-900/30 to-transparent opacity-80"></div>
+
+            <span className="absolute top-2.5 left-2.5 px-2 py-0.5 bg-amoled-950/95 backdrop-blur-md border border-white/10 text-[9px] font-bold uppercase rounded-md tracking-wider text-brand-400">
+              {video.category}
+            </span>
+
+            {!showHistoryMenu && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); onBookmark(video); }}
+                className="absolute top-2.5 right-2.5 w-7.5 h-7.5 p-1.5 rounded-lg bg-amoled-950/95 backdrop-blur-md border border-white/10 flex items-center justify-center text-xs text-slate-300 hover:text-brand-500 transition-colors shadow"
+              >
+                <i className={`${isBookmarked ? 'fa-solid fa-heart text-brand-500' : 'fa-regular fa-heart'}`}></i>
+              </button>
+            )}
+
+            {/* Watch history action menus */}
+            {showHistoryMenu && (
+              <div className="absolute top-2.5 right-2.5" ref={dropdownRef}>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setShowDropdown(!showDropdown); }}
+                  className="w-7.5 h-7.5 bg-amoled-950/95 backdrop-blur-md border border-white/10 text-slate-300 hover:text-rose-500 flex items-center justify-center rounded-lg transition-colors shadow"
+                >
+                  <i className="fa-solid fa-ellipsis-vertical text-xs"></i>
+                </button>
+                {showDropdown && (
+                  <div className="absolute right-0 mt-1 bg-amoled-950 border border-white/10 p-1 rounded-lg shadow-xl z-20 w-36">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowDropdown(false);
+                        onDeleteHistory(video.id);
+                      }}
+                      className="w-full text-left px-2.5 py-1.5 text-[10px] font-bold text-rose-500 hover:bg-rose-950/20 rounded flex items-center gap-1.5"
+                    >
+                      <i className="fa-solid fa-trash-can"></i>
+                      <span>Delete Entry</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Description Block */}
+          <div className="p-4 flex flex-col justify-between flex-grow gap-4">
+            <div className="space-y-1.5">
+              <h4 className="text-xs md:text-sm font-bold text-slate-200 line-clamp-2 leading-snug group-hover:text-white transition-colors">
+                {video.title}
+              </h4>
+              <div className="flex items-center gap-1.5 text-slate-500 text-[10px] font-bold tracking-wide uppercase">
+                <div className="w-4 h-4 rounded bg-brand-500/10 text-brand-400 flex items-center justify-center font-bold text-[9px]">
+                  {video.channelName ? video.channelName[0].toUpperCase() : 'E'}
+                </div>
+                <span className="truncate">{video.channelName}</span>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => onPlay(video)}
+              className="w-full py-2.5 bg-amoled-950 hover:bg-brand-600 text-slate-300 hover:text-white border border-white/5 hover:border-transparent text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all"
+            >
+              <i className="fa-solid fa-play text-[9px]"></i>
+              Watch Now
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<App />);
+  </script>
+</body>
+</html>
