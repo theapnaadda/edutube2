@@ -222,6 +222,29 @@
       { name: "EduTube", icon: "fa-circle-play", glow: "from-brand-600 to-indigo-600", tag: "Originals", count: "Resources", texture: "edutube" }
     ];
 
+    // Helper utility to parse various kinds of YouTube video, stream, or short links
+    function getYouTubeId(url) {
+      if (!url) return null;
+      const trimmed = url.trim();
+      
+      // If the admin directly provided an 11-character video ID
+      if (trimmed.length === 11 && !trimmed.includes('/') && !trimmed.includes('.')) {
+        return trimmed;
+      }
+
+      try {
+        // Regexp parsing handles regular videos, shorts, live endpoints, and shared URLs
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/|shorts\/)([^#\&\?]*).*/;
+        const match = trimmed.match(regExp);
+        if (match && match[2] && match[2].length === 11) {
+          return match[2];
+        }
+      } catch (error) {
+        console.error("YouTube parsing exception:", error);
+      }
+      return null;
+    }
+
     // High quality standard thumbnail fetcher for secure YouTube image assets
     function getThumbnail(id) {
       return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : '';
